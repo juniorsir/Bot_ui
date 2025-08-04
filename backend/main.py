@@ -10,6 +10,9 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import logging
+# The NEW way (using environment variables)
+import os
+from dotenv import load_dotenv
 
 import telegram
 from telegram.ext import Application
@@ -18,10 +21,20 @@ from telegram.request import HTTPXRequest
 # Import all functions and data from our refactored logic file
 from .data_logic import *
 
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_OWNER_ID = os.getenv("BOT_OWNER_ID")
+
+# Basic validation to ensure the variables are set
+if not BOT_TOKEN or not BOT_OWNER_ID:
+    raise ValueError("BOT_TOKEN and BOT_OWNER_ID must be set in the environment.")
+
+# Convert owner ID to integer
+try:
+    BOT_OWNER_ID = int(BOT_OWNER_ID)
+except (ValueError, TypeError):
+     raise ValueError("BOT_OWNER_ID must be a valid integer.")
+
 # --- CONFIGURATION ---
-# It's recommended to load these from environment variables in a real production app
-BOT_TOKEN = "7771111134:AAErbW4_fN4N92FvzOwQKMD2GSGrTuekfhw"  # Your Bot Token
-BOT_OWNER_ID = 6847527893                               # Your Telegram User ID
 
 # --- FastAPI & Telegram Bot Application Setup ---
 app = FastAPI()
@@ -33,7 +46,8 @@ ptb_app = Application.builder().token(BOT_TOKEN).build()
 origins = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    "*" # In production, you should restrict this to your actual frontend domain
+    "https://gadwa-backend.onrender.com"
+     # In production, you should restrict this to your actual frontend domain
 ]
 app.add_middleware(
     CORSMiddleware,

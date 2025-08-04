@@ -1,6 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-telegram-bot[httpx]
 colorlog
 pytz
 pydantic
+pyyaml
+python-dotenv  # <-- ADD THIS LINE
