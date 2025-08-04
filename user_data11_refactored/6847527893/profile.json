@@ -1,0 +1,18 @@
+{
+    "unique_id": "13186610",
+    "telegram_id": 6847527893,
+    "username": "local_dev",
+    "joined_date": "2025-08-04 07:47:49 PM",
+    "last_active_timestamp": "2025-08-04 08:37:19 PM",
+    "blocked_users": [],
+    "sent_requests": [],
+    "received_requests": [],
+    "relation": {
+        "is_me": true,
+        "is_friend": false,
+        "is_blocked": false,
+        "sent_request": false,
+        "received_request": false
+    },
+    "status": "online"
+}

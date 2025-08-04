@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+python-telegram-bot[httpx]
+colorlog
+pytz
+pydantic

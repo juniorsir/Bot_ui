@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gadwa App (Final Version)</title>
+    
+    <!-- All necessary CSS is included here -->
+    <style>
+        :root {
+            --tg-theme-bg-color: #18222d;
+            --tg-theme-text-color: #ffffff;
+            --tg-theme-hint-color: #b1c3d5;
+            --tg-theme-link-color: #62bcf9;
+            --tg-theme-button-color: #3e9de6;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #232e3c;
+            --tg-theme-header-bg-color: #1f2a37;
+            --tg-theme-destructive-color: #e15151;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color-scheme: dark; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); overflow: hidden; }
+        #app-container { display: flex; flex-direction: column; height: 100vh; }
+        #app-header { background-color: var(--tg-theme-header-bg-color); padding: 10px 15px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); min-height: 30px; }
+        #app-header .back-button { background: none; border: none; color: var(--tg-theme-link-color); font-size: 16px; cursor: pointer; margin-right: 15px; }
+        #app-header .header-title { font-size: 18px; font-weight: 600; }
+        #app-content { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        .loader-container { display: flex; justify-content: center; align-items: center; height: 100%; }
+        .loader { border: 4px solid var(--tg-theme-secondary-bg-color); border-radius: 50%; border-top: 4px solid var(--tg-theme-button-color); width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .button, button { display: block; width: 100%; padding: 12px 20px; margin-bottom: 10px; border: none; border-radius: 8px; background-color: var(--tg-theme-button-color, #3e9de6); color: var(--tg-theme-button-text-color, #ffffff); font-size: 16px; font-weight: 600; cursor: pointer; text-align: center; box-sizing: border-box; }
+        .button.secondary { background-color: var(--tg-theme-secondary-bg-color); }
+        .button.destructive { background-color: var(--tg-theme-destructive-color); }
+        .button-group { display: flex; gap: 10px; }
+        .button-group .button { margin-bottom: 0; }
+        .list-item { background-color: var(--tg-theme-secondary-bg-color); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background-color 0.2s; }
+        .list-item:hover { background-color: #313f50; }
+        .list-item .main-info { font-weight: 600; }
+        .list-item .sub-info { font-size: 14px; color: var(--tg-theme-hint-color); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-item .unread-badge { background-color: var(--tg-theme-link-color); color: var(--tg-theme-button-text-color); border-radius: 50%; min-width: 24px; height: 24px; padding: 0 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        .profile-header { text-align: center; padding: 20px; margin-bottom: 20px; }
+        .profile-header h1 { margin-top: 0; margin-bottom: 5px; }
+        .profile-header .uid { font-family: monospace; background-color: var(--tg-theme-bg-color); padding: 4px 8px; border-radius: 6px; color: var(--tg-theme-hint-color); }
+        .profile-header .status { color: var(--tg-theme-hint-color); font-style: italic; }
+        #chat-content { display: flex; flex-direction: column; height: 100%; }
+        #chat-messages { flex-grow: 1; overflow-y: auto; padding: 0 15px 15px 15px; margin: 0 -15px; }
+        .chat-bubble { padding: 10px 15px; border-radius: 18px; margin-bottom: 4px; max-width: 80%; word-wrap: break-word; }
+        .chat-bubble.sent { background-color: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); margin-left: auto; border-bottom-right-radius: 4px; }
+        .chat-bubble.received { background-color: var(--tg-theme-secondary-bg-color); margin-right: auto; border-bottom-left-radius: 4px; }
+        .chat-reactions { font-size: 12px; text-align: right; }
+        .chat-time { font-size: 12px; color: var(--tg-theme-hint-color); margin-bottom: 15px; }
+        .chat-time.sent { text-align: right; }
+        .chat-time.received { text-align: left; }
+        .chat-input-area { display: flex; padding-top: 10px; border-top: 1px solid var(--tg-theme-secondary-bg-color); }
+        .chat-input-area textarea { flex-grow: 1; border: none; border-radius: 18px; padding: 10px 15px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); resize: none; font-size: 16px; line-height: 1.4; max-height: 100px; }
+        .chat-input-area button { width: auto; margin: 0 0 0 10px; padding: 10px 15px; align-self: flex-end; }
+        .section-title { font-size: 18px; font-weight: 600; margin: 20px 0 10px; color: var(--tg-theme-hint-color); }
+        .info-text { text-align: center; color: var(--tg-theme-hint-color); padding: 20px; }
+        .chat-actions { display: flex; justify-content: space-around; padding: 10px 0; }
+        .chat-actions button { background: none; border: none; font-size: 20px; cursor: pointer;}
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .popup-box { background-color: var(--tg-theme-secondary-bg-color); padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; }
+        .popup-box h3 { margin-top: 0; }
+        .popup-input { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 8px; border: 1px solid var(--tg-theme-bg-color); background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-size: 16px; margin: 15px 0; text-align: center; }
+        .popup-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .popup-button { flex-grow: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .popup-button.default { background-color: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); }
+        .popup-button.secondary { background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="app-header"></div>
+        <div id="app-content">
+            <div class="loader-container"><div class="loader"></div></div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script>
+        // --- SCRIPT EXECUTION STARTS HERE ---
+
+        // 1. DEFINE THE MAIN APP LOGIC
+        function mainApp(initData) {
+            const tg = window.Telegram.WebApp;
+            const app = {
+                header: document.getElementById('app-header'),
+                content: document.getElementById('app-content'),
+                apiBaseUrl: 'http://10.220.80.171:8000',
+                state: { currentUser: null, navigationStack: [] },
+            };
+
+            async function apiFetch(endpoint, options = {}) {
+                if (!initData) throw new Error("CRITICAL: initData was not passed to the application.");
+                const response = await fetch(`${app.apiBaseUrl}${endpoint}`, {
+                    ...options,
+                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData, ...options.headers },
+                });
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ detail: `HTTP error! Status: ${response.status}` }));
+                    throw new Error(error.detail);
+                }
+                return response.status === 204 ? null : await response.json();
+            }
+
+            function navigateTo(pageFunction, ...args) {
+                const currentPage = app.state.navigationStack[app.state.navigationStack.length - 1];
+                if (currentPage && currentPage.func === pageFunction && JSON.stringify(currentPage.args) === JSON.stringify(args)) return;
+                app.state.navigationStack.push({ func: pageFunction, args });
+                pageFunction(...args);
+            }
+
+            function goBack() {
+                app.state.navigationStack.pop();
+                const previousPage = app.state.navigationStack[app.state.navigationStack.length - 1];
+                previousPage ? previousPage.func(...previousPage.args) : navigateTo(renderMainMenu);
+            }
+            
+            function renderHeader(title, showBackButton = false) {
+                let backButtonHtml = showBackButton ? `<button class="back-button">‹</button>` : '';
+                app.header.innerHTML = `${backButtonHtml}<div class="header-title">${title}</div>`;
+                if (showBackButton) {
+                    app.header.querySelector('.back-button').addEventListener('click', goBack);
+                }
+            }
+
+            function render(contentHtml, eventBinder) {
+                app.content.innerHTML = contentHtml;
+                if (eventBinder) eventBinder();
+                app.content.scrollTop = 0;
+            }
+
+            function renderLoading() { render(`<div class="loader-container"><div class="loader"></div></div>`); }
+
+            async function renderMainMenu() {
+                renderHeader('Gadwa App');
+                renderLoading();
+                const myProfile = await apiFetch('/api/me');
+                app.state.currentUser = myProfile;
+                const html = `
+                    <div class="profile-header">
+                        <h1>Welcome, ${myProfile.username}</h1>
+                        <p>Your UID: <code class="uid">${myProfile.unique_id}</code></p>
+                    </div>
+                    <button data-action="chats" class="button">Message History</button>
+                    <button data-action="friends" class="button">Friends</button>
+                    <button data-action="requests" class="button">Friend Requests</button>
+                    <button data-action="search" class="button secondary">Search User by UID</button>
+                `;
+                render(html, () => {
+                    app.content.addEventListener('click', (e) => {
+                        const action = e.target.dataset.action;
+                        if (!action) return;
+                        if (action === "chats") navigateTo(renderChatList);
+                        if (action === "friends") navigateTo(renderFriendsList);
+                        if (action === "requests") navigateTo(renderRequests);
+                        if (action === "search") handleSearch();
+                    });
+                });
+            }
+
+            async function renderChatList() {
+                renderHeader('Chats', true);
+                renderLoading();
+                const chats = await apiFetch('/api/chats');
+                let content = chats.length === 0
+                    ? `<p class="info-text">You have no message history.</p>`
+                    : chats.map(chat => `
+                        <div class="list-item" data-uid="${chat.partner_uid}">
+                            <div>
+                                <div class="main-info">${chat.partner_username}</div>
+                                <div class="sub-info">${chat.last_message_text || '...'}</div>
+                            </div>
+                            ${chat.unread_count > 0 ? `<div class="unread-badge">${chat.unread_count}</div>` : ''}
+                        </div>
+                    `).join('');
+                render(content, () => {
+                    app.content.querySelectorAll('.list-item').forEach(item => {
+                        item.addEventListener('click', e => navigateTo(renderChat, e.currentTarget.dataset.uid));
+                    });
+                });
+            }
+
+            async function renderChat(partnerUid) {
+                const profile = await apiFetch(`/api/profile/${partnerUid}`);
+                renderHeader(`Chat with ${profile.username}`, true);
+                render(`<div id="chat-content"><div id="chat-messages" class="loader-container"><div class="loader"></div></div><div class="chat-actions"><button data-emoji="❤️">❤️</button><button data-emoji="👍">👍</button><button data-emoji="😂">😂</button><button data-emoji="😢">😢</button><button data-emoji="😮">😮</button><button data-action="delete" style="color: var(--tg-theme-destructive-color);">🗑️</button></div><div class="chat-input-area"><textarea id="message-input" placeholder="Type a message..." rows="1"></textarea><button id="send-btn">➤</button></div></div>`);
+
+                const { messages } = await apiFetch(`/api/chat/${partnerUid}`);
+                const messagesHtml = messages.map(msg => {
+                    const isSent = msg.sender_uid === app.state.currentUser.unique_id;
+                    let reactionsHtml = '';
+                    if (msg.reactions && msg.reactions.length > 0) {
+                        reactionsHtml = `<div class="chat-reactions">${msg.reactions.map(r => r.emoji).join('')}</div>`;
+                    }
+                    return `<div class="chat-bubble ${isSent ? 'sent' : 'received'}">${msg.text}${reactionsHtml}</div>`;
+                }).join('');
+                
+                document.getElementById('chat-messages').innerHTML = messagesHtml;
+                document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+
+                document.getElementById('send-btn').addEventListener('click', async () => {
+                    const input = document.getElementById('message-input');
+                    if (input.value.trim()) {
+                        input.disabled = true;
+                        await apiFetch(`/api/message/${partnerUid}`, { method: 'POST', body: JSON.stringify({ text: input.value.trim() }) });
+                        renderChat(partnerUid);
+                    }
+                });
+                
+                app.content.querySelector('.chat-actions').addEventListener('click', async (e) => {
+                    if (e.target.dataset.emoji) {
+                        await apiFetch(`/api/react/${partnerUid}/${e.target.dataset.emoji}`, { method: 'POST' });
+                        renderChat(partnerUid);
+                    }
+                    if (e.target.dataset.action === 'delete') {
+                        tg.showConfirm("Are you sure you want to delete this entire chat history?", async (ok) => {
+                            if (ok) {
+                                await apiFetch(`/api/chat/${partnerUid}`, { method: 'DELETE' });
+                                goBack();
+                            }
+                        });
+                    }
+                });
+            }
+
+            async function renderProfile(targetUid) {
+                renderHeader('Profile', true);
+                renderLoading();
+                const profile = await apiFetch(`/api/profile/${targetUid}`);
+                const { relation } = profile;
+                let buttonsHtml = '';
+                if (!relation.is_me) {
+                    if (relation.is_blocked) {
+                        buttonsHtml = `<button data-action="unblock" class="button">Unblock User</button>`;
+                    } else {
+                        buttonsHtml += `<button data-action="block" class="button destructive">Block User</button>`;
+                        if (relation.is_friend) {
+                            buttonsHtml = `<button data-action="unfriend" class="button secondary">Unfriend</button>` + buttonsHtml;
+                        } else if (relation.sent_request) {
+                            buttonsHtml = `<button data-action="cancel_request" class="button secondary">Cancel Request</button>` + buttonsHtml;
+                        } else if (relation.received_request) {
+                            buttonsHtml = `<div class="button-group"><button data-action="accept_friend" class="button">Accept</button><button data-action="decline_friend" class="button secondary">Decline</button></div>` + buttonsHtml;
+                        } else {
+                            buttonsHtml = `<button data-action="add_friend" class="button">🤝 Add Friend</button>` + buttonsHtml;
+                        }
+                    }
+                }
+                const html = `
+                    <div class="profile-header"><h1>${profile.username}</h1><p>Status: <span class="status">${profile.status}</span></p><p>UID: <code class="uid">${profile.unique_id}</code></p></div>
+                    <div id="action-buttons">${buttonsHtml}</div>`;
+                render(html, () => {
+                    document.getElementById('action-buttons').addEventListener('click', async (e) => {
+                        if (e.target.tagName === 'BUTTON') {
+                            const action = e.target.dataset.action;
+                            await apiFetch(`/api/action/${action}/${targetUid}`, { method: 'POST' });
+                            tg.showAlert(`Action '${action.replace('_', ' ')}' was successful!`);
+                            renderProfile(targetUid);
+                        }
+                    });
+                });
+            }
+            
+            async function renderFriendsList() {
+                renderHeader('Friends', true);
+                renderLoading();
+                const friends = await apiFetch('/api/friends');
+                const content = friends.length === 0
+                    ? `<p class="info-text">You haven't added any friends yet.</p>`
+                    : friends.map(f => `<div class="list-item" data-uid="${f.unique_id}"><div class="main-info">${f.username}</div></div>`).join('');
+                render(content, () => {
+                    app.content.querySelectorAll('.list-item').forEach(item => {
+                        item.addEventListener('click', e => navigateTo(renderProfile, e.currentTarget.dataset.uid));
+                    });
+                });
+            }
+
+            async function renderRequests() {
+                renderHeader('Friend Requests', true);
+                renderLoading();
+                const { received, sent } = await apiFetch('/api/requests');
+                const renderList = (list, type) => list.length === 0 ? `<p class="info-text">None</p>` : list.map(req => `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; cursor: default;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
+                            <div class="main-info">${req.username}</div><div class="sub-info">UID: ${req.unique_id}</div>
+                        </div>
+                        ${type === 'received' 
+                            ? `<div class="button-group"><button data-action="accept_friend" data-uid="${req.unique_id}" class="button">Accept</button><button data-action="decline_friend" data-uid="${req.unique_id}" class="button secondary">Decline</button></div>`
+                            : `<button data-action="cancel_request" data-uid="${req.unique_id}" class="button secondary">Cancel</button>`}
+                    </div>`).join('');
+                const html = `<div class="section-title">Received</div><div>${renderList(received, 'received')}</div><div class="section-title">Sent</div><div>${renderList(sent, 'sent')}</div>`;
+                render(html, () => {
+                    app.content.addEventListener('click', async (e) => {
+                        if (e.target.tagName === 'BUTTON' && e.target.dataset.action) {
+                            await apiFetch(`/api/action/${e.target.dataset.action}/${e.target.dataset.uid}`, { method: 'POST' });
+                            tg.showAlert('Request updated!');
+                            renderRequests();
+                        }
+                    });
+                });
+            }
+
+            function renderPopup(title, contentHtml, buttons) {
+                const popupOverlay = document.createElement('div');
+                popupOverlay.className = 'popup-overlay';
+                const closePopup = () => popupOverlay.remove();
+                popupOverlay.innerHTML = `
+                    <div class="popup-box">
+                        <h3>${title}</h3>
+                        <div>${contentHtml}</div>
+                        <div class="popup-actions"></div>
+                    </div>`;
+                const actionsContainer = popupOverlay.querySelector('.popup-actions');
+                buttons.forEach(btn => {
+                    const buttonEl = document.createElement('button');
+                    buttonEl.textContent = btn.text;
+                    buttonEl.className = `popup-button ${btn.type || 'default'}`;
+                    buttonEl.onclick = () => {
+                        if (btn.action) btn.action();
+                        closePopup();
+                    };
+                    actionsContainer.appendChild(buttonEl);
+                });
+                document.body.appendChild(popupOverlay);
+            }
+
+            function handleSearch() {
+                renderPopup(
+                    'Search User',
+                    `<p>Enter the 8-digit Unique ID.</p><input type="number" id="uid-search-input" class="popup-input" placeholder="12345678" maxlength="8" />`,
+                    [
+                        { text: 'Cancel', type: 'secondary' },
+                        {
+                            text: 'Search',
+                            type: 'default',
+                            action: () => {
+                                const input = document.getElementById('uid-search-input');
+                                const uid = input.value.trim();
+                                if (uid && /^\d{8}$/.test(uid)) {
+                                    navigateTo(renderProfile, uid);
+                                } else {
+                                    tg.showAlert("Invalid UID format.");
+                                }
+                            }
+                        }
+                    ]
+                );
+            }
+
+            // --- Inner App Start ---
+            function startApp() {
+                try {
+                    tg.ready();
+                    tg.expand();
+                    navigateTo(renderMainMenu);
+                } catch(e) {
+                     document.body.innerHTML = `<pre>Error during app start: ${e.stack}</pre>`;
+                }
+            }
+            startApp();
+        }
+
+        // 2. THE LAUNCHER
+        function launch() {
+            try {
+                let dataToLaunchWith = null;
+                if (window.Telegram && window.Telegram.WebApp) {
+                    dataToLaunchWith = window.Telegram.WebApp.initData;
+                    if (!dataToLaunchWith) {
+                        dataToLaunchWith = "query_id=MOCK_FOR_LOCAL_DEV&user=%7B%22id%22%3A6847527893%2C%22first_name%22%3A%22Dev%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22local_dev%22%2C%22language_code%22%3A%22en%22%7D&auth_date=1672531200&hash=some_other_hash";
+                    }
+                } else {
+                    throw new Error("telegram-web-app.js failed to load.");
+                }
+                mainApp(dataToLaunchWith);
+            } catch (e) {
+                document.body.innerHTML = `<pre style="color:red;">Launch Error: ${e.stack}</pre>`;
+            }
+        }
+
+        // 3. TRIGGER THE LAUNCHER
+        launch();
+    </script>
+</body>
+</html>
