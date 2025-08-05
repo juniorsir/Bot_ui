@@ -422,6 +422,6 @@ async def react_to_last_message(partner_uid: str, emoji: str, current_user: Vali
 if __name__ == "__main__":
     # For local development: uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
     # The start command on Render should be: uvicorn main:app --host 0.0.0.0 --port 10000
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    
 
 # --- END OF UNIFIED backend/main.py FILE ---
