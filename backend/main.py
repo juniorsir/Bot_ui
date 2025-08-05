@@ -29,7 +29,11 @@ import colorlog
 from dotenv import load_dotenv
 
 # --- CONFIGURATION & SETUP ---
-
+origins = [
+    "https://dreamy-banoffee-9c18ac.netlify.app/", # <-- THIS MUST BE PRESENT
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
 # Load environment variables from a .env file for local development
 load_dotenv()
 
