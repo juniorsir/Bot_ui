@@ -234,7 +234,7 @@ ptb_app = Application.builder().token(BOT_TOKEN).build()
 
 # CORS Middleware
 origins = [
-    "https://dreamy-banoffee-9c18ac.netlify.app", # Your production frontend URL
+    "https://dreamy-banoffee-9c18ac.netlify.app", 
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]
