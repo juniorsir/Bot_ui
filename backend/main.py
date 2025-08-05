@@ -43,15 +43,20 @@ ptb_app = Application.builder().token(BOT_TOKEN).build()
 
 # --- CORS Middleware ---
 # Allows your frontend to communicate with this backend
+# The FINAL, CORRECT origins list for production
+
 origins = [
+    # For Production (most important)
+    "https://transcendent-banoffee-fa6a3a.netlify.app",
+
+    # For Local Development (still good to keep)
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    "https://gadwa-backend.onrender.com"
-     # In production, you should restrict this to your actual frontend domain
 ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins, # Use the updated list here
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
