@@ -1,4 +1,4 @@
-# --- START OF FINAL, COMPLETE, AND UNIFIED backend/main.py FILE ---
+# --- START OF UNIFIED backend/main.py FILE ---
 
 import uvicorn
 import json
@@ -30,20 +30,18 @@ from dotenv import load_dotenv
 
 # --- CONFIGURATION & SETUP ---
 
-# Load environment variables from a .env file if it exists (for local development)
+# Load environment variables from a .env file for local development
 load_dotenv()
 
-# Securely load secrets from environment variables
+# Securely load secrets from environment
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_OWNER_ID = os.getenv("BOT_OWNER_ID")
-
-# Validate that secrets are loaded, otherwise the app cannot run.
 if not BOT_TOKEN or not BOT_OWNER_ID:
-    raise ValueError("FATAL: BOT_TOKEN and BOT_OWNER_ID must be set in the environment.")
+    raise ValueError("BOT_TOKEN and BOT_OWNER_ID must be set in the environment.")
 try:
     BOT_OWNER_ID = int(BOT_OWNER_ID)
 except (ValueError, TypeError):
-    raise ValueError("FATAL: BOT_OWNER_ID must be a valid integer.")
+    raise ValueError("BOT_OWNER_ID must be a valid integer.")
 
 # Colored Logging Setup
 log = logging.getLogger()
@@ -63,11 +61,11 @@ PROFILE_FILE, FRIENDS_FILE, MESSAGE_HISTORY_FILE, UID_TO_TID_MAP_FILE = "profile
 ist = pytz.timezone('Asia/Kolkata')
 os.makedirs(USER_DATA_DIR, exist_ok=True)
 
-# In-memory data caches that will be populated on startup
+# In-memory data caches
 uid_to_tid_map_cache, tid_to_profile_cache, tid_to_friends_cache, tid_to_history_cache = {}, {}, {}, {}
 
 
-# --- DATA LOGIC (Ported from original bot and integrated) ---
+# --- DATA LOGIC (Ported from gadwa72.py) ---
 
 #<editor-fold desc="File I/O and Data Loading">
 def get_user_data_path(telegram_id, filename=""):
@@ -116,7 +114,7 @@ def load_all_data_into_memory():
         profile_data = _load_json_data_from_file(os.path.join(user_folder, PROFILE_FILE), {})
         profile_data.setdefault("sent_requests", [])
         profile_data.setdefault("received_requests", [])
-        profile_data.setdefault("bio", "") # Ensure bio field exists for older users
+        profile_data.setdefault("bio", "") # Ensure bio field exists
         tid_to_profile_cache[tid] = profile_data
         tid_to_friends_cache[tid] = _load_json_data_from_file(os.path.join(user_folder, FRIENDS_FILE), [])
         tid_to_history_cache[tid] = _load_json_data_from_file(os.path.join(user_folder, MESSAGE_HISTORY_FILE), {})
@@ -197,8 +195,7 @@ def remove_pending_request(sender_uid, receiver_uid):
 
 def block_user_by_tid(telegram_id, uid_to_block):
     if profile := tid_to_profile_cache.get(telegram_id):
-        if str(uid_to_block) not in profile.setdefault("blocked_users", []):
-            profile["blocked_users"].append(str(uid_to_block))
+        profile.setdefault("blocked_users", []).append(str(uid_to_block))
 
 def unblock_user_by_tid(telegram_id, uid_to_unblock):
     if profile := tid_to_profile_cache.get(telegram_id):
@@ -234,8 +231,7 @@ ptb_app = Application.builder().token(BOT_TOKEN).build()
 
 # CORS Middleware
 origins = [
-    "https://dreamy-banoffee-9c18ac.netlify.app", 
-
+    "https://dreamy-banoffee-9c18ac.netlify.app", # Your production frontend URL
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]
@@ -368,8 +364,8 @@ async def get_requests_list(current_user: ValidatedUser = Depends(get_current_us
     profile = get_user_profile_by_tid(current_user.id)
     if not profile: raise HTTPException(status_code=404, detail="Profile not found.")
     return JSONResponse(content={
-        "received": [get_user_profile_by_uid(uid) for uid in profile.get("received_requests", []) if get_user_profile_by_uid(uid)],
-        "sent": [get_user_profile_by_uid(uid) for uid in profile.get("sent_requests", []) if get_user_profile_by_uid(uid)]
+        "received": [get_user_profile_by_uid(uid) for uid in profile.get("received_requests", [])],
+        "sent": [get_user_profile_by_uid(uid) for uid in profile.get("sent_requests", [])]
     })
 
 @app.post("/api/action/{action}/{target_uid}")
@@ -421,12 +417,7 @@ async def react_to_last_message(partner_uid: str, emoji: str, current_user: Vali
 
 # --- Run Server ---
 if __name__ == "__main__":
-    # For local development: uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-    # The start command on Render should be: uvicorn main:app --host 0.0.0.0 --port 10000
-<<<<<<< HEAD
+    # For production, you might run this without reload, e.g., via a process manager like Gunicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-=======
-    
->>>>>>> origin/main
 
 # --- END OF UNIFIED backend/main.py FILE ---
