@@ -237,8 +237,9 @@
                 const { relation } = profile;
                 let buttonsHtml = '';
                 if (!relation.is_me) {
+                    buttonsHtml += `<button data-action="send_message" class="button">📨 Send Message</button>`; // SEND MESSAGE BUTTON ADDED
                     if (relation.is_blocked) {
-                        buttonsHtml = `<button data-action="unblock" class="button">Unblock User</button>`;
+                        buttonsHtml += `<button data-action="unblock" class="button">Unblock User</button>`;
                     } else {
                         buttonsHtml += `<button data-action="block" class="button destructive">Block User</button>`;
                         if (relation.is_friend) {
@@ -268,10 +269,8 @@
                         if (!target || !target.dataset.action) return;
                         const action = target.dataset.action;
 
-                        if (action === 'edit_bio') {
-                            handleEditBio(profile.bio || '');
-                            return;
-                        }
+                        if (action === 'edit_bio') { handleEditBio(profile.bio || ''); return; }
+                        if (action === 'send_message') { navigateTo(renderChat, targetUid); return; }
 
                         await apiFetch(`/api/action/${action}/${targetUid}`, { method: 'POST' });
                         tg.showAlert(`Action '${action.replace(/_/g, ' ')}' was successful!`);
