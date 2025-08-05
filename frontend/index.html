@@ -39,6 +39,7 @@
         .list-item .unread-badge { background-color: var(--tg-theme-link-color); color: var(--tg-theme-button-text-color); border-radius: 50%; min-width: 24px; height: 24px; padding: 0 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
         .profile-header { text-align: center; padding: 20px; margin-bottom: 20px; }
         .profile-header h1 { margin-top: 0; margin-bottom: 5px; }
+        .profile-header .bio { font-style: italic; color: var(--tg-theme-hint-color); margin: 10px 0; }
         .profile-header .uid { font-family: monospace; background-color: var(--tg-theme-bg-color); padding: 4px 8px; border-radius: 6px; color: var(--tg-theme-hint-color); }
         .profile-header .status { color: var(--tg-theme-hint-color); font-style: italic; }
         #chat-content { display: flex; flex-direction: column; height: 100%; }
@@ -61,6 +62,7 @@
         .popup-box { background-color: var(--tg-theme-secondary-bg-color); padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; }
         .popup-box h3 { margin-top: 0; }
         .popup-input { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 8px; border: 1px solid var(--tg-theme-bg-color); background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-size: 16px; margin: 15px 0; text-align: center; }
+        textarea.popup-input { text-align: left; height: 80px; }
         .popup-actions { display: flex; gap: 10px; margin-top: 20px; }
         .popup-button { flex-grow: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .popup-button.default { background-color: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); }
@@ -86,7 +88,7 @@
             const app = {
                 header: document.getElementById('app-header'),
                 content: document.getElementById('app-content'),
-                apiBaseUrl: 'https://gadwa-backend.onrender.com',
+                apiBaseUrl: 'https://gadwa-backend.onrender.com', // PRODUCTION URL
                 state: { currentUser: null, navigationStack: [] },
             };
 
@@ -145,16 +147,20 @@
                     <button data-action="chats" class="button">Message History</button>
                     <button data-action="friends" class="button">Friends</button>
                     <button data-action="requests" class="button">Friend Requests</button>
+                    <button data-action="profile" data-uid="${myProfile.unique_id}" class="button secondary">My Profile</button>
                     <button data-action="search" class="button secondary">Search User by UID</button>
                 `;
                 render(html, () => {
                     app.content.addEventListener('click', (e) => {
-                        const action = e.target.dataset.action;
-                        if (!action) return;
+                        const target = e.target.closest('button');
+                        if (!target || !target.dataset.action) return;
+                        const action = target.dataset.action;
+                        
                         if (action === "chats") navigateTo(renderChatList);
                         if (action === "friends") navigateTo(renderFriendsList);
                         if (action === "requests") navigateTo(renderRequests);
                         if (action === "search") handleSearch();
+                        if (action === "profile") navigateTo(renderProfile, target.dataset.uid);
                     });
                 });
             }
@@ -247,16 +253,29 @@
                     }
                 }
                 const html = `
-                    <div class="profile-header"><h1>${profile.username}</h1><p>Status: <span class="status">${profile.status}</span></p><p>UID: <code class="uid">${profile.unique_id}</code></p></div>
-                    <div id="action-buttons">${buttonsHtml}</div>`;
+                    <div class="profile-header">
+                        <h1>${profile.username}</h1>
+                        <p class="bio">${profile.bio || 'This user has no bio.'}</p>
+                        <p>Status: <span class="status">${profile.status}</span></p>
+                        <p>UID: <code class="uid">${profile.unique_id}</code></p>
+                    </div>
+                    <div id="action-buttons">${buttonsHtml}</div>
+                    ${relation.is_me ? '<button data-action="edit_bio" class="button secondary">Edit Bio</button>' : ''}
+                `;
                 render(html, () => {
-                    document.getElementById('action-buttons').addEventListener('click', async (e) => {
-                        if (e.target.tagName === 'BUTTON') {
-                            const action = e.target.dataset.action;
-                            await apiFetch(`/api/action/${action}/${targetUid}`, { method: 'POST' });
-                            tg.showAlert(`Action '${action.replace('_', ' ')}' was successful!`);
-                            renderProfile(targetUid);
+                    app.content.addEventListener('click', async (e) => {
+                        const target = e.target.closest('button');
+                        if (!target || !target.dataset.action) return;
+                        const action = target.dataset.action;
+
+                        if (action === 'edit_bio') {
+                            handleEditBio(profile.bio || '');
+                            return;
                         }
+
+                        await apiFetch(`/api/action/${action}/${targetUid}`, { method: 'POST' });
+                        tg.showAlert(`Action '${action.replace(/_/g, ' ')}' was successful!`);
+                        renderProfile(targetUid);
                     });
                 });
             }
@@ -291,8 +310,9 @@
                 const html = `<div class="section-title">Received</div><div>${renderList(received, 'received')}</div><div class="section-title">Sent</div><div>${renderList(sent, 'sent')}</div>`;
                 render(html, () => {
                     app.content.addEventListener('click', async (e) => {
-                        if (e.target.tagName === 'BUTTON' && e.target.dataset.action) {
-                            await apiFetch(`/api/action/${e.target.dataset.action}/${e.target.dataset.uid}`, { method: 'POST' });
+                        const target = e.target.closest('button');
+                        if (target && target.dataset.action) {
+                            await apiFetch(`/api/action/${target.dataset.action}/${target.dataset.uid}`, { method: 'POST' });
                             tg.showAlert('Request updated!');
                             renderRequests();
                         }
@@ -304,12 +324,7 @@
                 const popupOverlay = document.createElement('div');
                 popupOverlay.className = 'popup-overlay';
                 const closePopup = () => popupOverlay.remove();
-                popupOverlay.innerHTML = `
-                    <div class="popup-box">
-                        <h3>${title}</h3>
-                        <div>${contentHtml}</div>
-                        <div class="popup-actions"></div>
-                    </div>`;
+                popupOverlay.innerHTML = `<div class="popup-box"><h3>${title}</h3><div>${contentHtml}</div><div class="popup-actions"></div></div>`;
                 const actionsContainer = popupOverlay.querySelector('.popup-actions');
                 buttons.forEach(btn => {
                     const buttonEl = document.createElement('button');
@@ -325,37 +340,34 @@
             }
 
             function handleSearch() {
-                renderPopup(
-                    'Search User',
-                    `<p>Enter the 8-digit Unique ID.</p><input type="number" id="uid-search-input" class="popup-input" placeholder="12345678" maxlength="8" />`,
-                    [
-                        { text: 'Cancel', type: 'secondary' },
-                        {
-                            text: 'Search',
-                            type: 'default',
-                            action: () => {
-                                const input = document.getElementById('uid-search-input');
-                                const uid = input.value.trim();
-                                if (uid && /^\d{8}$/.test(uid)) {
-                                    navigateTo(renderProfile, uid);
-                                } else {
-                                    tg.showAlert("Invalid UID format.");
-                                }
-                            }
-                        }
-                    ]
+                renderPopup('Search User', `<p>Enter the 8-digit Unique ID.</p><input type="number" id="uid-search-input" class="popup-input" placeholder="12345678" maxlength="8" />`,
+                    [{ text: 'Cancel', type: 'secondary' }, { text: 'Search', type: 'default', action: () => {
+                        const input = document.getElementById('uid-search-input');
+                        const uid = input.value.trim();
+                        if (uid && /^\d{8}$/.test(uid)) { navigateTo(renderProfile, uid); } 
+                        else { tg.showAlert("Invalid UID format."); }
+                    }}]
                 );
             }
 
-            // --- Inner App Start ---
+            function handleEditBio(currentBio) {
+                renderPopup('Edit Your Bio', `<textarea id="bio-edit-input" class="popup-input" placeholder="Tell us about yourself..." maxlength="150">${currentBio}</textarea>`,
+                    [{ text: 'Cancel', type: 'secondary' }, { text: 'Save', type: 'default', action: async () => {
+                        const newBio = document.getElementById('bio-edit-input').value.trim();
+                        renderLoading();
+                        await apiFetch('/api/me/bio', { method: 'PUT', body: JSON.stringify({ bio: newBio }) });
+                        tg.showAlert("Bio updated!");
+                        renderProfile(app.state.currentUser.unique_id);
+                    }}]
+                );
+            }
+
             function startApp() {
                 try {
                     tg.ready();
                     tg.expand();
                     navigateTo(renderMainMenu);
-                } catch(e) {
-                     document.body.innerHTML = `<pre>Error during app start: ${e.stack}</pre>`;
-                }
+                } catch(e) { document.body.innerHTML = `<pre>Error during app start: ${e.stack}</pre>`; }
             }
             startApp();
         }
@@ -369,13 +381,9 @@
                     if (!dataToLaunchWith) {
                         dataToLaunchWith = "query_id=MOCK_FOR_LOCAL_DEV&user=%7B%22id%22%3A6847527893%2C%22first_name%22%3A%22Dev%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22local_dev%22%2C%22language_code%22%3A%22en%22%7D&auth_date=1672531200&hash=some_other_hash";
                     }
-                } else {
-                    throw new Error("telegram-web-app.js failed to load.");
-                }
+                } else { throw new Error("telegram-web-app.js failed to load."); }
                 mainApp(dataToLaunchWith);
-            } catch (e) {
-                document.body.innerHTML = `<pre style="color:red;">Launch Error: ${e.stack}</pre>`;
-            }
+            } catch (e) { document.body.innerHTML = `<pre style="color:red;">Launch Error: ${e.stack}</pre>`; }
         }
 
         // 3. TRIGGER THE LAUNCHER
