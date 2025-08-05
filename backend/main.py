@@ -235,6 +235,7 @@ ptb_app = Application.builder().token(BOT_TOKEN).build()
 # CORS Middleware
 origins = [
     "https://dreamy-banoffee-9c18ac.netlify.app", 
+
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]
@@ -422,6 +423,10 @@ async def react_to_last_message(partner_uid: str, emoji: str, current_user: Vali
 if __name__ == "__main__":
     # For local development: uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
     # The start command on Render should be: uvicorn main:app --host 0.0.0.0 --port 10000
+<<<<<<< HEAD
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+=======
+    
+>>>>>>> origin/main
 
 # --- END OF UNIFIED backend/main.py FILE ---
